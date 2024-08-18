@@ -1,30 +1,65 @@
-# Descripción
+# Descripción del proyecto
 
-La compañía de seguros Sure Tomorrow quiere resolver varias tareas con la ayuda de machine learning y te pide que evalúes esa posibilidad.
+Rusty Bargain es un servicio de venta de coches de segunda mano que está desarrollando una app para atraer a nuevos clientes. Gracias a esa app, puedes averiguar rápidamente el valor de mercado de tu coche. Tienes acceso al historial, especificaciones técnicas, versiones de equipamiento y precios. Tienes que crear un modelo que determine el valor de mercado.
 
-Tarea 1: encontrar clientes que sean similares a un cliente determinado. Esto ayudará a los agentes de la compañía con el marketing.
+A Rusty Bargain le interesa:
 
-Tarea 2: predecir si es probable que un nuevo cliente reciba un beneficio de seguro. ¿Puede un modelo de predicción funcionar mejor que un modelo ficticio?
-
-Tarea 3: predecir la cantidad de beneficios de seguro que probablemente recibirá un nuevo cliente utilizando un modelo de regresión lineal.
-
-Tarea 4: proteger los datos personales de los clientes sin romper el modelo de la tarea anterior.
-
-Es necesario desarrollar un algoritmo de transformación de datos que dificulte la recuperación de la información personal si los datos caen en manos equivocadas. Esto se denomina enmascaramiento de datos u ofuscación de datos. Pero los datos deben protegerse de tal manera que la calidad de los modelos de machine learning no se vea afectada. No es necesario elegir el mejor modelo, basta con demostrar que el algoritmo funciona correctamente.
+- la calidad de la predicción
+- la velocidad de la predicción
+- el tiempo requerido para el entrenamiento
 
 ## Instrucciones del proyecto
 
-### Carga los datos.
+1. Descarga y examina los datos.
+2. Entrena diferentes modelos con varios hiperparámetros (debes hacer al menos dos modelos diferentes, pero más es mejor. 3. Recuerda, varias implementaciones de potenciación del gradiente no cuentan como modelos diferentes). El punto principal de este paso es comparar métodos de potenciación del gradiente con bosque aleatorio, árbol de decisión y regresión lineal.
+4. Analiza la velocidad y la calidad de los modelos.
 
-Verifica que los datos no tengan problemas: no faltan datos, no hay valores extremos, etc.
-Trabaja en cada tarea y responde las preguntas planteadas en la plantilla del proyecto.
-Saca conclusiones basadas en tu experiencia trabajando en el proyecto.
-Hay algo de código previo en la plantilla del proyecto, siéntete libre de usarlo. Primero se debe terminar algo de código previo. Además, hay dos apéndices en la plantilla del proyecto con información útil.
+## Observaciones:
 
-## Descripción de datos
+- Utiliza la métrica RECM para evaluar los modelos.
+- La regresión lineal no es muy buena para el ajuste de hiperparámetros, pero es perfecta para hacer una prueba de cordura de otros métodos. Si la potenciación del gradiente funciona peor que la regresión lineal, definitivamente algo salió mal.
+- Aprende por tu propia cuenta sobre la librería LightGBM y sus herramientas para crear modelos de potenciación del gradiente (gradient boosting).
+- Idealmente, tu proyecto debe tener regresión lineal para una prueba de cordura, un algoritmo basado en árbol con ajuste de hiperparámetros (preferiblemente, bosque aleatorio), LightGBM con ajuste de hiperparámetros (prueba un par de conjuntos), y CatBoost y XGBoost con ajuste de hiperparámetros (opcional).
+- Toma nota de la codificación de características categóricas para algoritmos simples. LightGBM y CatBoost tienen su implementación, pero XGBoost requiere OHE.
+- Puedes usar un comando especial para encontrar el tiempo de ejecución del código de celda en Jupyter Notebook. Encuentra ese comando.
+- Dado que el entrenamiento de un modelo de potenciación del gradiente puede llevar mucho tiempo, cambia solo algunos parámetros del modelo.
+- Si Jupyter Notebook deja de funcionar, elimina las variables excesivas por medio del operador del:
+  
+## Descripción de los datos
 
-El dataset se almacena en el archivo /datasets/insurance_us.csv. Puedes descargar el dataset aquí.
+### Características
 
-Características: sexo, edad, salario y número de familiares de la persona asegurada.
+- DateCrawled — fecha en la que se descargó el perfil de la base de datos
+- VehicleType — tipo de carrocería del vehículo
+- RegistrationYear — año de matriculación del vehículo
+- Gearbox — tipo de caja de cambios
+- Power — potencia (CV)
+- Model — modelo del vehículo
+- Mileage — kilometraje (medido en km de acuerdo con las especificidades regionales del conjunto de datos)
+- RegistrationMonth — mes de matriculación del vehículo
+- FuelType — tipo de combustible
+- Brand — marca del vehículo
+- NotRepaired — vehículo con o sin reparación
+- DateCreated — fecha de creación del perfil
+- NumberOfPictures — número de fotos del vehículo
+- PostalCode — código postal del propietario del perfil (usuario)
+- LastSeen — fecha de la última vez que el usuario estuvo activo
 
-Objetivo: número de beneficios de seguro recibidos por una persona asegurada en los últimos cinco años.
+### Objetivo
+
+Price — precio (en euros)
+ 
+## Evaluación del proyecto
+
+Hemos definido los criterios de evaluación para el proyecto. Léelos con atención antes de pasar al ejercicio.
+
+Esto es en lo que se fijarán los revisores al examinar tu proyecto:
+
+- ¿Seguiste todos los pasos de las instrucciones?
+- ¿Cómo preparaste los datos?
+- ¿Qué modelos e hiperparámetros consideraste?
+- ¿Conseguiste evitar la duplicación del código?
+- ¿Cuáles son tus hallazgos?
+- ¿Mantuviste la estructura del proyecto?
+- ¿Mantuviste el código ordenado?
+- Ya tienes tus hojas informativas y los resúmenes de los capítulos, por lo que todo está listo para continuar con el proyecto
