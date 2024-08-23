@@ -1,0 +1,10 @@
+model,best_estimator,best_train_score,validation_score
+dummie,"Pipeline(steps=[('scaler', MaxAbsScaler()),
+                ('dummie', DummyClassifier(constant=1, strategy='constant'))])",0.20443008294582168,0.19962570180910794
+knn,"Pipeline(steps=[('knn',
+                 KNeighborsClassifier(metric='euclidean',
+                                      n_neighbors=np.int64(1)))])",0.4369580668088131,0.6950354609929078
+knn_esc,"Pipeline(steps=[('scaler', MaxAbsScaler()),
+                ('knn',
+                 KNeighborsClassifier(metric='cityblock',
+                                      n_neighbors=np.int64(3)))])",0.9275952060851373,0.9205298013245033

@@ -5,13 +5,6 @@ import math
 import plotly.express as px
 import sys
 import os
-from statsmodels.tsa.seasonal import seasonal_decompose
-from statsmodels.tsa.stattools import adfuller
-from statsmodels.tsa.stattools import kpss
-from statsmodels.graphics import tsaplots
-from sklearn.model_selection import train_test_split
-from pmdarima import auto_arima
-from statsmodels.tsa.arima.model import ARIMA
 from sklearn.metrics import mean_squared_error
 
 def eda_report(data):

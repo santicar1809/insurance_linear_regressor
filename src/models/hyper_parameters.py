@@ -1,97 +1,117 @@
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.pipeline import Pipeline
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import LinearRegression
-from lightgbm import LGBMRegressor
-from xgboost import XGBRegressor
-from catboost import Pool, CatBoostRegressor
-from statsmodels.tsa.seasonal import seasonal_decompose
+from scipy.spatial import distance
 import numpy as np
+from sklearn.preprocessing import MaxAbsScaler
+import pandas as pd
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.dummy import DummyClassifier
+from sklearn.pipeline import Pipeline
 
-## Logistic Regression Model
-def all_models():
+class NearestNeighbor():
+    def __init__(self, metric='euclidean', k=5):
+        self.k = k
+        self.metric = metric
+        
+        if metric not in ['euclidean', 'manhattan']:
+            raise ValueError("Métrica no soportada. Usa 'euclidean' o 'manhattan'.")
+        
+    def _compute_distance(self, vector1, vector2):
+        if self.metric == 'euclidean':
+            return distance.euclidean(vector1, vector2)
+        elif self.metric == 'manhattan':
+            return distance.cityblock(vector1, vector2)
+
+    def nearest_neighbor_predict(self, new_features):
+        distances = []
+        
+        for i in range(self.features.shape[0]):
+            vector = self.features.iloc[i].values
+            dist = self._compute_distance(new_features, vector)
+            distances.append(dist)
+        
+        distances = np.array(distances)
+        best_indices = distances.argsort()[:self.k]
+        best_indices=np.delete(best_indices,0)
+        return distances[best_indices], best_indices
+
+    def get_knn(self, features, query_point_index=0):
+        self.features = features
+        query_point = self.features.iloc[query_point_index].values
+
+        nbrs_distances, nbrs_indices = self.nearest_neighbor_predict(query_point)
+
+        df_res = pd.concat([
+            self.features.iloc[nbrs_indices],
+            pd.DataFrame(nbrs_distances,index=nbrs_indices,columns=['distance'])
+        ], axis=1)
+    
+        return df_res
+
+class LinearRegression():
+    def fit(self, train_features, train_target):
+        X = np.concatenate((np.ones((train_features.shape[0], 1)), train_features), axis=1)
+        y = train_target
+        w = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
+        self.w = w[1:]
+        self.w0 = w[0]
+
+    def predict(self, test_features):
+        return test_features.dot(self.w) + self.w0
+
+def knn_models():
     '''This function will host all the model parameters, can be used to iterate the
     grid search '''
-
-    lr_pipeline = Pipeline([
-        ('scaler',StandardScaler()),
-        ('Linreg', LinearRegression())
-    ])
-
-    lr_param_grid = {
-        }
-
-    lr = ['Linreg',lr_pipeline,lr_param_grid]
-
-    xg_pipeline = Pipeline([
-        ('scaler',StandardScaler()),
-        ('xgboost', XGBRegressor(random_state=1234))
-    ])
-
-    xg_param_grid = {
-    'xgboost__n_estimators': [50, 100, 200],
-    'xgboost__max_depth': [3, 5, 7],
-    'xgboost__learning_rate': [0.01, 0.1, 0.2]
+    #Creamos los pipelines
+    knn_euclidean=NearestNeighbor(metric='euclidean', k=5)
+    knn_manhattan=NearestNeighbor(metric='manhattan', k=5)
+    models=[knn_euclidean,knn_manhattan]
     
-}
-
-    xg = ['XGboost',xg_pipeline,xg_param_grid]
-    
-    rf_pipeline = Pipeline([
-    ('scaler',StandardScaler()),
-    ('random_forest', RandomForestRegressor(random_state=1234))])
-
-    # Crear el grid de parámetros para Random Forest
-    rf_param_grid = {
-        'random_forest__n_estimators': [10,20,30],  # Número de árboles en el bosque
-        'random_forest__max_depth': [10, 20, 30],  # Profundidad máxima del árbol
-        'random_forest__min_samples_split': [2, 5, 10] # Número mínimo de muestras requeridas para estar en un nodo hoja
-    }
-
-    # Evaluar el modelo con la función model_evaluation
-    rf = ['Random_Forest',rf_pipeline,rf_param_grid]
-    
-    
-    dt_pipeline=Pipeline([
-    ('scaler',StandardScaler()),
-    ('dt',DecisionTreeRegressor())])
-    
-    dt_params={
-        'dt__max_depth': [3,4,2,1],
-        'dt__max_features':[np.random.randint(1, 9)],
-        'dt__min_samples_leaf': [1, 2, 4]
-    }
-    
-    dt=['dt',dt_pipeline,dt_params]
-    
-    models = [lr,xg,rf,dt] #Activate to run all the models
     return models
 
-def category_models(cat_features):
-    lgbm_pipeline = Pipeline([
-        ('lightgbm', LGBMRegressor())
+def knn():
+    # Creamos los pipelines
+    pipe_knn_esc = Pipeline([
+        ('scaler', MaxAbsScaler()),
+        ('knn', KNeighborsClassifier())
+    ])
+    pipe_knn = Pipeline([
+        ('knn', KNeighborsClassifier())
+    ])
+    params_grid ={
+        'knn__n_neighbors':np.arange(1,16),
+        'knn__metric': ['euclidean', 'cityblock']
+    }
+    
+    dummie_pipeline = Pipeline([
+        ('scaler', MaxAbsScaler()),
+        ('dummie',DummyClassifier(strategy="constant",constant=1))
     ])
 
-    lgbm_param_grid = {
-        'lightgbm__max_depth': [3, 5, 7],  # Profundidad máxima del árbol
-        'lightgbm__learning_rate': [0.1, 0.01, 0.001],  # Tasa de aprendizaje
-        'lightgbm__n_estimators': [10, 50, 100],  # Número de árboles en el bosque
-        
-    }
+    dummie_param_grid = {
+            'dummie__strategy': ['constant'],  # Regularización
+            'dummie__constant': [1]  # Fuerza de la regularización
+            }
+    dummie = ['dummie',dummie_pipeline,dummie_param_grid]
     
-    lgbm = ['lightgbm',lgbm_pipeline,lgbm_param_grid]
+    knn=['knn',pipe_knn,params_grid]
+    knn_esc=['knn_esc',pipe_knn_esc,params_grid]
+    models=[dummie,knn,knn_esc]
+
     
-    cat_param_grid = {
-        'cat__iterations': range(50, 201, 50),
-        'cat__depth': range(1, 11)
-    }
+    return models
+
+def linear_regression_models():
+    pipe_linear_regression_esc=Pipeline([
+        ('scaler', MaxAbsScaler()),
+        ('lr',LinearRegression())  
+    ])
     
-    cat_pipeline = Pipeline([
-        ('cat',CatBoostRegressor(random_state=1234,cat_features=cat_features))])
+    pipe_linear_regression=Pipeline([
+        ('lr',LinearRegression())
+    ])
     
-    cat = ['cat',cat_pipeline,cat_param_grid]
+    lr_esc=['lr_esc',pipe_linear_regression_esc]
+    lr=['lr',pipe_linear_regression]
     
-    models = [cat,lgbm]
-    #models = [lgbm]
+    models=[lr_esc,lr]
+    
     return models
