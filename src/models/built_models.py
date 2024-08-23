@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn import metrics
 from sklearn.preprocessing import MaxAbsScaler
-from src.models.hyper_parameters import knn_models,knn,linear_regression_models
+from src.models.hyper_parameters import knn_models,knn,linear_regression_models,LinearRegressionOfuscated
 import joblib
 
 def binaria(columna):
@@ -43,25 +43,38 @@ def iterative_modeling(data):
         results.append(result)
         result.to_csv(f'./files/modeling_output/reports/model_report_{i}.csv',index=False) 
     
+    # KNN
     results_knn=[]
-    
     for model in models_knn:
         result_knn= knn_algorithm(data,model[1], model[2])
         best_estimator,best_score,score_val = result_knn
         results_knn.append([model[0],best_estimator,best_score, score_val])
         joblib.dump(best_estimator,output_path +f'best_random_{model[0]}.joblib')
     results_df = pd.DataFrame(results_knn, columns=['model','best_estimator','best_train_score','validation_score'])
-    results_df.to_csv('./files/modeling_output/reports/model_report.csv',index=False)
+    results_df.to_csv('./files/modeling_output/reports/model_report_knn.csv',index=False)
     
+    # Linear Regression
+    results_lr=[]
     for model in models_lr:
         result_lr= linear_regression(data,model[1])
         score_val = result_lr
-        results_knn.append([model[0],best_estimator,best_score, score_val])
-        joblib.dump(best_estimator,output_path +f'best_random_{model[0]}.joblib')
-    results_df = pd.DataFrame(results_knn, columns=['model','best_estimator','best_train_score','validation_score'])
-    results_df.to_csv('./files/modeling_output/reports/model_report.csv',index=False)
+        results_lr.append([model[0],score_val[0],score_val[1]])
+        joblib.dump(model,output_path +f'best_random_{model[0]}.joblib')
+    results_lr = pd.DataFrame(results_lr, columns=['model','rmse','r2'])
+    results_lr.to_csv('./files/modeling_output/reports/model_report_lr.csv',index=False)
     
-    return results_df
+    # Linear Regression with Ofuscate
+    results_lro=[]
+    model=LinearRegressionOfuscated()
+    result_lro= linear_regression_ofuscated(data,model)
+    score_val = result_lro
+    results_lro.append(['lro',score_val[0],score_val[1]])
+    joblib.dump(model,output_path +f'best_random_lro.joblib')
+    results_lro = pd.DataFrame(results_lro, columns=['model','rmse','r2'])
+    results_lro.to_csv('./files/modeling_output/reports/model_report_lro.csv',index=False)
+    
+    
+    return
 
 
 def model_knn(data, model):
@@ -96,6 +109,25 @@ def knn_algorithm(data, pipe,params_grid):
     return best_estimator, best_score, score_val
 
 def linear_regression(data, pipe):
+    '''This function will host the structure to run all the models, splitting the
+    dataset, oversampling the data and returning the scores'''
+    seed=12345
+    #Separamos los datasets
+    features=data.drop(['insurance_benefits','insurance_benefit_acepted'],axis=1)
+    features=features.to_numpy()
+    target=data['insurance_benefits'].to_numpy()
+    features_train,features_valid,target_train,target_valid=train_test_split(
+        features,target,test_size=0.3,random_state=seed)
+    
+    pipe.fit(features_train, target_train)
+    
+    # Scores
+    predict_valid = pipe.predict(features_valid)
+    score_val=eval_regressor(target_valid,predict_valid)
+
+    return score_val
+
+def linear_regression_ofuscated(data, pipe):
     '''This function will host the structure to run all the models, splitting the
     dataset, oversampling the data and returning the scores'''
     seed=12345

@@ -6,6 +6,43 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.dummy import DummyClassifier
 from sklearn.pipeline import Pipeline
 
+
+def get_P(X):
+        while True:
+                try:
+                        rng = np.random.default_rng(seed=42)
+                        P = rng.random(size=(X.shape[1], X.shape[1]))   
+                        X @ P
+                        return P
+                        break
+                        
+                except ValueError:
+                        print('Vuelve a intentar')
+class LinearRegressionOfuscated():
+    def __init__(self, obfusc=True):
+        self.obfusc=obfusc
+        self.P=None
+    def obfuscate(self,X):
+        if self.obfusc==True:
+            X2= X @ self.P
+            return X2
+    def fit(self, train_features, train_target):
+        if self.obfusc==True:
+            self.P=get_P(train_features)
+            train_features=train_features @ self.P
+        X = np.concatenate((np.ones((train_features.shape[0], 1)), train_features), axis=1)
+        y = train_target
+        w = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
+        self.w = w[1:]
+        self.w0 = w[0]
+        
+    def predict(self, test_features):
+        if self.obfusc==True:
+            test_features=test_features @ self.P
+        #X = np.concatenate((np.ones((test_features.shape[0], 1)), test_features), axis=1)
+        return test_features.dot(self.w) + self.w0
+    
+
 class NearestNeighbor():
     def __init__(self, metric='euclidean', k=5):
         self.k = k
